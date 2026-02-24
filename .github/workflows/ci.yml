@@ -44,7 +44,7 @@ jobs:
 
       # core + examples compile for the wasm32 target
       - name: Check core & examples (wasm32)
-        run: cargo check -p typhoon-core -p counter -p todo --target wasm32-unknown-unknown
+        run: cargo check -p typhoon-core -p counter -p todo -p clock -p components --target wasm32-unknown-unknown
 
       - name: Clippy (proc-macro)
         run: cargo clippy -p typhoon-macro -- -D warnings
@@ -87,13 +87,23 @@ jobs:
         working-directory: examples/todo
         run: trunk build --release --public-url "/$REPO_NAME/todo/"
 
+      - name: Build clock example
+        working-directory: examples/clock
+        run: trunk build --release --public-url "/$REPO_NAME/clock/"
+
+      - name: Build components example
+        working-directory: examples/components
+        run: trunk build --release --public-url "/$REPO_NAME/components/"
+
       # Assemble: static docs site + built examples
       - name: Assemble Pages site
         run: |
-          mkdir -p _site/counter _site/todo
-          cp -r docs/.  _site/
-          cp -r examples/counter/dist/.  _site/counter/
-          cp -r examples/todo/dist/.     _site/todo/
+          mkdir -p _site/counter _site/todo _site/clock _site/components
+          cp -r docs/.                    _site/
+          cp -r examples/counter/dist/.   _site/counter/
+          cp -r examples/todo/dist/.      _site/todo/
+          cp -r examples/clock/dist/.     _site/clock/
+          cp -r examples/components/dist/. _site/components/
 
       # Upload the assembled folder as the GitHub Pages artifact
       - name: Upload Pages artifact
@@ -113,6 +123,18 @@ jobs:
         with:
           name: todo-dist
           path: examples/todo/dist/
+
+      - name: Upload clock dist (artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: clock-dist
+          path: examples/clock/dist/
+
+      - name: Upload components dist (artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: components-dist
+          path: examples/components/dist/
 
   # ── 3. Deploy to GitHub Pages (main branch only) ────────────────────────────
   deploy:

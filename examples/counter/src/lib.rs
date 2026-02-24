@@ -3,22 +3,17 @@ use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen(start)]
 pub fn main() {
-    init(); // readable panics in console
+    init();
 
-    // ── State ──────────────────────────────────────────────────────────────
     let count = use_state(0i32);
 
-    // ── DOM refs we'll update reactively ───────────────────────────────────
     let display = tp! { p.text(count.get()).style("font-size:2rem;margin:1rem 0") };
-
-    // Keep a reference to update on state change
     let display_ref = display.clone();
     let count_sub = count.clone();
     count.subscribe(move || {
         display_ref.set_text_content(Some(&count_sub.get().to_string()));
     });
 
-    // ── Handlers ───────────────────────────────────────────────────────────
     let count_inc = count.clone();
     let on_inc = move || count_inc.set(count_inc.get() + 1);
 
@@ -28,7 +23,6 @@ pub fn main() {
     let count_rst = count.clone();
     let on_rst = move || count_rst.set(0);
 
-    // ── UI ─────────────────────────────────────────────────────────────────
     let app = tp! {
         div.class("app").style("font-family:sans-serif;text-align:center;padding:2rem") {
             h1.text("🌀 Typhoon Counter")
@@ -40,8 +34,6 @@ pub fn main() {
         }
     };
 
-    // Append our reactive display inside app
     app.append_child(display.as_ref()).unwrap();
-
     mount(app);
 }

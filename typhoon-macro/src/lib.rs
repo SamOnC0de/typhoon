@@ -7,7 +7,6 @@ use syn::{
     parse_macro_input, Expr, Ident, LitStr, Token,
 };
 
-/// A method call chain on a node: `.class("foo")`, `.text(val)`, etc.
 struct NodeMethod {
     name: Ident,
     arg: Expr,
@@ -24,10 +23,7 @@ impl Parse for NodeMethod {
     }
 }
 
-/// A single node in the tp! tree.
-///
-/// Grammar:
-///   node = tag [method]* ['{' [node | lit_str]* '}']
+/// Grammar: `tag [.method(arg)]* ['{' children '}']`
 struct TpNode {
     tag: Ident,
     methods: Vec<NodeMethod>,
@@ -37,25 +33,28 @@ struct TpNode {
 enum TpChild {
     Node(TpNode),
     Text(LitStr),
+    Embed(Expr), // (expr) — embeds an Element returned by a component/function
 }
 
 impl Parse for TpNode {
     fn parse(input: ParseStream) -> Result<Self> {
         let tag: Ident = input.parse()?;
 
-        // Parse chained method calls (.foo(bar))
         let mut methods = Vec::new();
         while input.peek(Token![.]) {
             methods.push(input.parse::<NodeMethod>()?);
         }
 
-        // Optionally parse children in braces
         let mut children = Vec::new();
         if input.peek(syn::token::Brace) {
             let content;
             braced!(content in input);
             while !content.is_empty() {
-                if content.peek(LitStr) {
+                if content.peek(syn::token::Paren) {
+                    let inner;
+                    syn::parenthesized!(inner in content);
+                    children.push(TpChild::Embed(inner.parse()?));
+                } else if content.peek(LitStr) {
                     children.push(TpChild::Text(content.parse()?));
                 } else {
                     children.push(TpChild::Node(content.parse()?));
@@ -63,15 +62,10 @@ impl Parse for TpNode {
             }
         }
 
-        Ok(TpNode {
-            tag,
-            methods,
-            children,
-        })
+        Ok(TpNode { tag, methods, children })
     }
 }
 
-/// Parse the full tp! input (one root node).
 struct TpInput(TpNode);
 
 impl Parse for TpInput {
@@ -80,16 +74,13 @@ impl Parse for TpInput {
     }
 }
 
-/// Recursively generate code for a TpNode.
 fn generate_node(node: &TpNode) -> TokenStream2 {
     let tag = node.tag.to_string();
 
-    // Start with element creation
     let mut stmts = quote! {
         let __el = ::typhoon_core::create_element(#tag);
     };
 
-    // Apply methods
     for method in &node.methods {
         let method_name = method.name.to_string();
         let arg = &method.arg;
@@ -160,7 +151,6 @@ fn generate_node(node: &TpNode) -> TokenStream2 {
         }
     }
 
-    // Generate children
     for child in &node.children {
         match child {
             TpChild::Node(child_node) => {
@@ -180,21 +170,29 @@ fn generate_node(node: &TpNode) -> TokenStream2 {
                     ::typhoon_core::append_text_node(&__el, #lit);
                 };
             }
+            TpChild::Embed(expr) => {
+                stmts = quote! {
+                    #stmts
+                    {
+                        let __embedded = #expr;
+                        ::typhoon_core::append_child(&__el, &__embedded);
+                    }
+                };
+            }
         }
     }
 
     stmts
 }
 
-/// The `tp!` macro — write HTML-like trees in Rust.
+/// Write HTML-like element trees in Rust.
 ///
-/// # Example
 /// ```ignore
 /// tp! {
 ///     div.class("app") {
-///         h1.text("Hello Typhoon!")
-///         button.onclick(my_handler) { "Click me" }
-///         p.text(count)
+///         h1.text("Hello")
+///         button.onclick(my_handler) { "Click" }
+///         (my_component())
 ///     }
 /// }
 /// ```

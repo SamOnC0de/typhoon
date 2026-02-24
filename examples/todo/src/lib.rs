@@ -6,22 +6,17 @@ use wasm_bindgen::JsCast;
 pub fn main() {
     init();
 
-    // ── State ──────────────────────────────────────────────────────────────
     let todos: Signal<Vec<String>> = use_local_storage("todos", vec![]);
     let input_val: Signal<String> = use_state(String::new());
 
-    // ── Reactive list container ────────────────────────────────────────────
     let list = tp! { ul.style("list-style:none;padding:0;margin:1rem 0;max-width:400px") };
     let list_ref = list.clone();
 
-    // Re-render the <ul> whenever todos change
     let todos_for_sub = todos.clone();
     todos.subscribe(move || {
-        // Clear existing children
         while let Some(child) = list_ref.first_child() {
             list_ref.remove_child(&child).ok();
         }
-        // Re-populate
         for (i, item) in todos_for_sub.get().iter().enumerate() {
             let li = tp! {
                 li.style("display:flex;align-items:center;gap:.5rem;padding:.4rem 0;border-bottom:1px solid #313244")
@@ -41,7 +36,6 @@ pub fn main() {
         }
     });
 
-    // ── Add todo logic ─────────────────────────────────────────────────────
     let add_todo = {
         let todos = todos.clone();
         let input_val = input_val.clone();
@@ -57,7 +51,6 @@ pub fn main() {
         }
     };
 
-    // ── Input field ────────────────────────────────────────────────────────
     let input_val_for_input = input_val.clone();
     let add_for_input = add_todo.clone();
 
@@ -69,26 +62,22 @@ pub fn main() {
             .onkeydown(move |key: String| { if key == "Enter" { add_for_input(); } })
     };
 
-    // Sync input element value attribute reactively
+    // Sync the DOM value property so the field clears after adding
     let inp_ref = inp.clone();
     let input_val_sub = input_val.clone();
     input_val.subscribe(move || {
         inp_ref.set_attribute("value", &input_val_sub.get()).ok();
-        // Also set .value property so the field actually clears
         let html_input: web_sys::HtmlInputElement = inp_ref.clone().dyn_into().unwrap();
         html_input.set_value(&input_val_sub.get());
     });
 
-    // ── UI ─────────────────────────────────────────────────────────────────
     let app = tp! {
         div.class("app").style("font-family:sans-serif;padding:2rem;max-width:480px;margin:0 auto") {
             h1.text("🌀 Typhoon Todo").style("margin-bottom:1rem")
         }
     };
 
-    let row = tp! {
-        div.style("display:flex;gap:.5rem")
-    };
+    let row = tp! { div.style("display:flex;gap:.5rem") };
 
     let add_btn = tp! {
         button

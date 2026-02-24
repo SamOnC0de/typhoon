@@ -226,6 +226,162 @@ and `.set()` on the returned `Signal<T>`.
 
 ---
 
+### `use_memo<T, D, F>(deps: D, compute: F) -> Signal<T>`
+
+Creates a **computed signal** that re-evaluates `compute` automatically whenever
+a dependency changes. The result is itself a `Signal<T>`.
+
+`deps` accepts a single `Signal<T>` or a tuple of up to three signals.
+
+```rust
+let count = use_state(0i32);
+let c = count.clone();
+let doubled = use_memo(count.clone(), move || c.get() * 2);
+
+// doubled.get() == 0
+count.set(5);
+// doubled.get() == 10  ← recomputed automatically
+```
+
+Two dependencies:
+
+```rust
+let first = use_state("John".to_string());
+let last  = use_state("Doe".to_string());
+let (fc, lc) = (first.clone(), last.clone());
+
+let full_name = use_memo((first.clone(), last.clone()), move || {
+    format!("{} {}", fc.get(), lc.get())
+});
+
+last.set("Smith".to_string());
+// full_name.get() == "John Smith"  ← auto-updated
+```
+
+---
+
+### Components
+
+Components are **plain Rust functions** that return an `Element`. No class,
+no lifecycle boilerplate — just a function.
+
+Embed them inside `tp!` with the `(expr)` syntax:
+
+```rust
+fn badge(label: &str) -> Element {
+    tp! { span.text(label).style("padding:2px 8px;border-radius:999px;background:#313244") }
+}
+
+fn card(title: &str, body: &str) -> Element {
+    let el = tp! { div.class("card").style("border:1px solid #313244;padding:1rem;border-radius:8px") };
+    let h  = tp! { h3.text(title) };
+    let p  = tp! { p.text(body).style("color:#6c7086") };
+    el.append_child(h.as_ref()).unwrap();
+    el.append_child(p.as_ref()).unwrap();
+    el.append_child(badge("new").as_ref()).unwrap();
+    el
+}
+
+let app = tp! {
+    div {
+        h1.text("Gallery")
+        (card("Rust", "Fast & safe systems language"))   // ← (expr) embedding
+        (card("WASM", "Run anywhere at near-native speed"))
+    }
+};
+```
+
+**Components with local state** — each call creates an independent `Signal`:
+
+```rust
+fn counter() -> Element {
+    let n = use_state(0i32);
+    let display = tp! { span.text(n.get()) };
+    let d = display.clone(); let s = n.clone();
+    n.subscribe(move || d.set_text_content(Some(&s.get().to_string())));
+    let inc = n.clone();
+    let el = tp! {
+        div.style("display:flex;gap:.5rem;align-items:center") {
+            button.onclick(move || inc.set(inc.get() + 1)) { "+" }
+        }
+    };
+    el.append_child(display.as_ref()).unwrap();
+    el
+}
+
+// Three fully independent instances:
+let app = tp! {
+    div {
+        (counter())
+        (counter())
+        (counter())
+    }
+};
+```
+
+Run the component demo:
+```bash
+cd examples/components && trunk serve
+```
+
+---
+
+### `use_effect(f: impl FnOnce() + 'static)`
+
+Schedules a side-effect to run once, asynchronously, after the current render
+(equivalent to `setTimeout(f, 0)`). Use it for: initial data fetches, DOM
+measurements, or anything that must run after `mount()`.
+
+Pair it with [`spawn_local`](#spawn_local) for async work:
+
+```rust
+use_effect(move || {
+    spawn_local(async move {
+        // wasm_bindgen_futures executor — runs your Future on the WASM event loop
+        let resp = fetch_text("https://api.example.com/data").await;
+        data.set(resp);
+    });
+});
+```
+
+---
+
+### `use_interval(callback: impl FnMut() + 'static, ms: i32) -> IntervalHandle`
+
+Sets up a repeating callback every `ms` milliseconds.
+
+Returns an `IntervalHandle`. The interval is **automatically cancelled** when
+the handle is dropped. Call `.forget()` to let it run for the whole page lifetime.
+
+```rust
+// Run forever (clock, polling, etc.)
+let time = use_state(current_time());
+let time_tick = time.clone();
+use_interval(move || {
+    time_tick.set(current_time());
+}, 1000).forget();
+
+// Or keep the handle to cancel on demand
+let handle = use_interval(move || { /* … */ }, 500);
+drop(handle); // interval stops here
+```
+
+---
+
+### `spawn_local(future: impl Future<Output = ()> + 'static)`
+
+Re-exported from `wasm-bindgen-futures`. Drives an `async` block on the WASM
+single-threaded executor. This is the only way to use `.await` in a WASM app.
+
+```rust
+spawn_local(async move {
+    let text = JsFuture::from(/* fetch promise */).await.unwrap();
+    state.set(text.as_string().unwrap());
+});
+```
+
+---
+
 ### `use_router(routes: Vec<(&'static str, Box<dyn Fn() -> Element>)>) -> Element`
 
 A lightweight hash-based router. Routes are matched against
@@ -366,9 +522,11 @@ cd examples/todo && trunk serve
 | Event handlers | `onclick`, `oninput`, `onkeydown` | ✅ v0.1 |
 | `use_local_storage` | Persistent key/value hook | ✅ v0.2 |
 | `use_router` | Hash-based navigation | ✅ v0.2 |
-| `use_effect` | Side-effects hook (fetch, timers) | 🔲 v0.3 |
-| Components | Function-based component system | 🔲 v0.3 |
-| `use_memo` | Computed/derived signals | 🔲 v0.3 |
+| `use_effect` | One-shot async side-effect | ✅ v0.2 |
+| `use_interval` | Repeating timer with RAII cleanup | ✅ v0.2 |
+| Components | Function components + `(expr)` embedding in `tp!` | ✅ v0.3 |
+| `use_memo` | Computed/derived signals | ✅ v0.3 |
+| Publish to crates.io | `cargo add typhoon-core` | 🔲 v1.0 |
 
 ---
 

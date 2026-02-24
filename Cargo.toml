@@ -4,5 +4,7 @@ members = [
     "typhoon-macro",
     "examples/counter",
     "examples/todo",
+    "examples/clock",
+    "examples/components",
 ]
 resolver = "2"

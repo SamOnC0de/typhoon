@@ -47,19 +47,19 @@
     }
     nav .btn-gh:hover { border-color: var(--accent); color: var(--accent); }
 
-    /* ── Hero ── */
-    .hero {
+    /* ── Intro ── */
+    .intro {
       text-align: center;
       padding: 5rem 2rem 3rem;
       max-width: 700px;
       margin: 0 auto;
     }
-    .hero h1 { font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 800; color: var(--accent); }
-    .hero p  { margin-top: 1rem; color: var(--muted); font-size: 1.1rem; }
-    .hero .badges { margin-top: 1.2rem; display: flex; justify-content: center; gap: .6rem; flex-wrap: wrap; }
-    .hero .badges img { height: 20px; }
-    .hero .cta { margin-top: 2rem; display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; }
-    .hero .cta a {
+    .intro h1 { font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 800; color: var(--accent); }
+    .intro p  { margin-top: 1rem; color: var(--muted); font-size: 1.1rem; }
+    .intro .badges { margin-top: 1.2rem; display: flex; justify-content: center; gap: .6rem; flex-wrap: wrap; }
+    .intro .badges img { height: 20px; }
+    .intro .cta { margin-top: 2rem; display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; }
+    .intro .cta a {
       padding: .6rem 1.4rem;
       border-radius: 8px;
       font-weight: 600;
@@ -196,8 +196,8 @@
   <a class="btn-gh" href="https://github.com/SamOnC0de/typhoon" target="_blank" rel="noopener">GitHub →</a>
 </nav>
 
-<!-- ── Hero ───────────────────────────────────────────────────── -->
-<section class="hero">
+<!-- ── Intro ──────────────────────────────────────────────────── -->
+<section class="intro">
   <h1>Build web UIs in pure Rust</h1>
   <p>Typhoon is a lightweight Rust/WASM frontend framework designed for beginners.<br>
      No JavaScript. No heavyweight runtime. Just Rust and the DOM.</p>
@@ -233,6 +233,10 @@
     <div class="card">
       <h3>🔀 Hash router</h3>
       <p><code>use_router()</code> maps <code>#/</code>, <code>#/about</code> etc. to render functions — zero config needed.</p>
+    </div>
+    <div class="card">
+      <h3>⏱ Effects & timers</h3>
+      <p><code>use_effect()</code> runs after mount. <code>use_interval()</code> sets up a repeating timer with RAII cleanup.</p>
     </div>
     <div class="card">
       <h3>📦 &lt; 100 KB</h3>
@@ -306,10 +310,12 @@ app.<span class="fn">append_child</span>(display.as_ref()).<span class="fn">unwr
     <li><span class="tag tag-done">done</span> Counter &amp; Todo examples</li>
     <li><span class="tag tag-done">done</span> <code>use_local_storage()</code> — JSON persistence</li>
     <li><span class="tag tag-done">done</span> <code>use_router()</code> — hash-based routing</li>
+    <li><span class="tag tag-done">done</span> <code>use_effect()</code> — one-shot async side-effect</li>
+    <li><span class="tag tag-done">done</span> <code>use_interval()</code> — repeating timer with RAII cleanup</li>
     <li><span class="tag tag-wip">in progress</span> GitHub Actions CI — build &amp; deploy docs</li>
-    <li><span class="tag tag-next">planned</span> <code>use_effect()</code> — side-effect hook</li>
-    <li><span class="tag tag-next">planned</span> Computed signals (<code>use_memo()</code>)</li>
-    <li><span class="tag tag-next">planned</span> Component model</li>
+    <li><span class="tag tag-done">done</span> Component model — function components + <code>(expr)</code> in <code>tp!</code></li>
+    <li><span class="tag tag-done">done</span> <code>use_memo()</code> — computed/derived signals</li>
+    <li><span class="tag tag-next">planned</span> Publish to crates.io — <code>cargo add typhoon-core</code></li>
   </ul>
 </section>
 

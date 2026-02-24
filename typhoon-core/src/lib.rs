@@ -1,32 +1,4 @@
-//! # Typhoon Core
-//!
-//! Lightweight Rust/WASM frontend framework for beginners.
-//!
-//! Build web UIs in pure Rust with the `tp!` macro — no JavaScript needed.
-//!
-//! ## Quick Start
-//!
-//! ```rust,ignore
-//! use typhoon_core::prelude::*;
-//!
-//! #[typhoon_core::main]
-//! fn app() {
-//!     let count = use_state(0u32);
-//!
-//!     let inc = {
-//!         let count = count.clone();
-//!         move || count.set(count.get() + 1)
-//!     };
-//!
-//!     mount(tp! {
-//!         div.class("app") {
-//!             h1.text("Counter")
-//!             button.onclick(inc) { "+" }
-//!             p.text(count.get())
-//!         }
-//!     });
-//! }
-//! ```
+//! Lightweight Rust/WASM frontend framework.
 
 use std::{cell::RefCell, rc::Rc};
 
@@ -34,17 +6,12 @@ use serde::{de::DeserializeOwned, Serialize};
 use wasm_bindgen::prelude::*;
 use web_sys::{Document, Element, Text};
 
-// Re-export the tp! macro
 pub use typhoon_macro::tp;
-
-// ─── Panic hook ──────────────────────────────────────────────────────────────
 
 /// Call once at startup to get readable panic messages in the browser console.
 pub fn init() {
     console_error_panic_hook::set_once();
 }
-
-// ─── DOM helpers (used by tp! generated code) ────────────────────────────────
 
 fn document() -> Document {
     web_sys::window()
@@ -53,7 +20,6 @@ fn document() -> Document {
         .expect("no document")
 }
 
-/// Create a DOM element by tag name.
 #[inline]
 pub fn create_element(tag: &str) -> Element {
     document()
@@ -61,33 +27,28 @@ pub fn create_element(tag: &str) -> Element {
         .unwrap_or_else(|_| panic!("failed to create <{}>", tag))
 }
 
-/// Set the `textContent` of an element.
 #[inline]
 pub fn set_text_content(el: &Element, value: &dyn std::fmt::Display) {
     el.set_text_content(Some(&value.to_string()));
 }
 
-/// Set a CSS class string on an element.
 #[inline]
 pub fn set_class(el: &Element, class: &str) {
     el.set_class_name(class);
 }
 
-/// Set an inline style string on an element.
 #[inline]
 pub fn set_style(el: &Element, style: &str) {
     el.set_attribute("style", style)
         .expect("failed to set style");
 }
 
-/// Set an arbitrary HTML attribute.
 #[inline]
 pub fn set_attribute(el: &Element, name: &str, value: &dyn std::fmt::Display) {
     el.set_attribute(name, &value.to_string())
         .unwrap_or_else(|_| panic!("failed to set attribute {}", name));
 }
 
-/// Append a child element.
 #[inline]
 pub fn append_child(parent: &Element, child: &Element) {
     parent
@@ -95,7 +56,6 @@ pub fn append_child(parent: &Element, child: &Element) {
         .expect("failed to append child");
 }
 
-/// Append a raw text node.
 #[inline]
 pub fn append_text_node(parent: &Element, text: &str) {
     let doc = document();
@@ -105,17 +65,15 @@ pub fn append_text_node(parent: &Element, text: &str) {
         .expect("failed to append text node");
 }
 
-/// Attach a click handler to an element.
 pub fn set_onclick<F: FnMut() + 'static>(el: &Element, mut handler: F) {
     let closure = Closure::<dyn FnMut(_)>::new(move |_event: web_sys::MouseEvent| {
         handler();
     });
     el.add_event_listener_with_callback("click", closure.as_ref().unchecked_ref())
         .expect("failed to add click listener");
-    closure.forget(); // keep alive
+    closure.forget();
 }
 
-/// Attach an input handler to an element.
 pub fn set_oninput<F: FnMut(String) + 'static>(el: &Element, mut handler: F) {
     let closure = Closure::<dyn FnMut(_)>::new(move |event: web_sys::InputEvent| {
         let target = event.target().expect("no target");
@@ -127,7 +85,6 @@ pub fn set_oninput<F: FnMut(String) + 'static>(el: &Element, mut handler: F) {
     closure.forget();
 }
 
-/// Attach a keydown handler to an element.
 pub fn set_onkeydown<F: FnMut(String) + 'static>(el: &Element, mut handler: F) {
     let closure = Closure::<dyn FnMut(_)>::new(move |event: web_sys::KeyboardEvent| {
         handler(event.key());
@@ -137,7 +94,7 @@ pub fn set_onkeydown<F: FnMut(String) + 'static>(el: &Element, mut handler: F) {
     closure.forget();
 }
 
-// ─── Reactive State ───────────────────────────────────────────────────────────
+// ── Signal ────────────────────────────────────────────────────────────────────
 
 type Subscriber = Box<dyn Fn()>;
 
@@ -146,18 +103,7 @@ struct SignalInner<T> {
     subscribers: Vec<Subscriber>,
 }
 
-/// A reactive signal. When you call `.set()`, all registered listeners
-/// are notified automatically.
-///
-/// # Example
-/// ```ignore
-/// let count = use_state(0u32);
-/// let count2 = count.clone();
-/// count.subscribe(move || {
-///     // re-render or update DOM here
-/// });
-/// count2.set(count2.get() + 1); // triggers subscriber
-/// ```
+/// Reactive value. Cloning shares the same underlying state.
 pub struct Signal<T: Clone + 'static> {
     inner: Rc<RefCell<SignalInner<T>>>,
 }
@@ -180,39 +126,32 @@ impl<T: Clone + 'static> Signal<T> {
         }
     }
 
-    /// Get the current value (cloned).
+    /// Returns the current value (cloned).
     pub fn get(&self) -> T {
         self.inner.borrow().value.clone()
     }
 
-    /// Set a new value and notify all subscribers.
+    /// Updates the value and notifies all subscribers.
     pub fn set(&self, value: T) {
         self.inner.borrow_mut().value = value;
 
-        // Collect subscriber count first, then call each one.
-        // We re-borrow each time so that a subscriber calling .set() again
-        // (re-entrancy) works without panicking — new subscribers added during
-        // notification are skipped for this round, which is fine for MVP.
+        // Index-based loop + raw pointer so a subscriber calling .set() again
+        // (re-entrant) doesn't panic on the RefCell borrow.
+        // SAFETY: Box<dyn Fn()> address is stable in a Vec that only grows;
+        // the Rc clone keeps it alive for the duration of the call.
         let len = self.inner.borrow().subscribers.len();
         for i in 0..len {
-            // Clone the Rc so we don't hold the RefCell borrow while calling the fn.
             let rc = Rc::clone(&self.inner);
-            // SAFETY (logical): we index within bounds checked above, and Subscriber
-            // is a Box<dyn Fn()> stored in a Vec that grows but never shrinks.
-            // The Box address is stable once inserted, so casting to a raw pointer
-            // and calling after releasing the borrow is sound for our MVP use case.
             let fn_ptr: *const dyn Fn() = {
                 let guard = rc.borrow();
                 &*guard.subscribers[i] as *const dyn Fn()
             };
-            // SAFETY: the Box is alive as long as `self.inner` (Rc) is alive,
-            // and we're still holding an Rc clone (`rc`) throughout this call.
             unsafe { (*fn_ptr)() };
             drop(rc);
         }
     }
 
-    /// Register a callback that runs whenever the value changes.
+    /// Registers a callback that runs on every value change.
     pub fn subscribe<F: Fn() + 'static>(&self, f: F) {
         self.inner.borrow_mut().subscribers.push(Box::new(f));
     }
@@ -224,27 +163,20 @@ impl<T: Clone + std::fmt::Display + 'static> std::fmt::Display for Signal<T> {
     }
 }
 
-/// Create a reactive state value.
-///
-/// # Example
-/// ```ignore
-/// let count = use_state(0u32);
-/// let c = count.clone();
-/// button.onclick(move || c.set(c.get() + 1));
-/// ```
+/// Creates a reactive state value.
 pub fn use_state<T: Clone + 'static>(initial: T) -> Signal<T> {
     Signal::new(initial)
 }
 
-// ─── Mount ────────────────────────────────────────────────────────────────────
+// ── Mount ─────────────────────────────────────────────────────────────────────
 
-/// Mount an element to `document.body`.
+/// Mounts an element to `document.body`.
 pub fn mount(el: Element) {
     let body = document().body().expect("document has no body");
     body.append_child(el.as_ref()).expect("failed to mount");
 }
 
-/// Mount an element to a specific DOM id.
+/// Mounts an element to a specific DOM id.
 pub fn mount_to(id: &str, el: Element) {
     let target = document()
         .get_element_by_id(id)
@@ -252,19 +184,64 @@ pub fn mount_to(id: &str, el: Element) {
     target.append_child(el.as_ref()).expect("failed to mount");
 }
 
-// ─── LocalStorage hook ───────────────────────────────────────────────────────
+// ── Effects ───────────────────────────────────────────────────────────────────
 
-/// Create a reactive signal backed by `localStorage`.
-///
-/// The value is loaded from `localStorage` on first call (falling back to
-/// `default` if absent or malformed), and automatically persisted as JSON
-/// every time `.set()` is called.
-///
-/// # Example
-/// ```ignore
-/// let todos: Signal<Vec<String>> = use_local_storage("todos", vec![]);
-/// todos.set(vec!["Buy milk".into()]); // persisted immediately
-/// ```
+/// Runs a one-shot side-effect after the current render (next event-loop tick).
+pub fn use_effect<F: FnOnce() + 'static>(f: F) {
+    let f = Rc::new(RefCell::new(Some(f)));
+    let closure = Closure::<dyn FnMut()>::new(move || {
+        if let Some(f) = f.borrow_mut().take() {
+            f();
+        }
+    });
+    web_sys::window()
+        .expect("no window")
+        .set_timeout_with_callback_and_timeout_and_arguments_0(
+            closure.as_ref().unchecked_ref(),
+            0,
+        )
+        .expect("failed to schedule effect");
+    closure.forget();
+}
+
+/// Handle to a running interval. Cleared on drop; call `.forget()` to keep it alive.
+pub struct IntervalHandle(i32);
+
+impl IntervalHandle {
+    /// Prevents the interval from being cancelled when the handle is dropped.
+    pub fn forget(self) {
+        std::mem::forget(self);
+    }
+}
+
+impl Drop for IntervalHandle {
+    fn drop(&mut self) {
+        if let Some(w) = web_sys::window() {
+            w.clear_interval_with_handle(self.0);
+        }
+    }
+}
+
+/// Runs a callback every `ms` milliseconds. Returns an [`IntervalHandle`].
+pub fn use_interval<F: FnMut() + 'static>(callback: F, ms: i32) -> IntervalHandle {
+    let closure = Closure::<dyn FnMut()>::new(callback);
+    let id = web_sys::window()
+        .expect("no window")
+        .set_interval_with_callback_and_timeout_and_arguments_0(
+            closure.as_ref().unchecked_ref(),
+            ms,
+        )
+        .expect("failed to set interval");
+    closure.forget();
+    IntervalHandle(id)
+}
+
+/// Spawns an async block on the WASM executor.
+pub use wasm_bindgen_futures::spawn_local;
+
+// ── Local storage ─────────────────────────────────────────────────────────────
+
+/// Reactive signal backed by `localStorage`. Persists as JSON on every `.set()`.
 pub fn use_local_storage<T>(key: &'static str, default: T) -> Signal<T>
 where
     T: Serialize + DeserializeOwned + Clone + 'static,
@@ -291,23 +268,12 @@ where
     signal
 }
 
-// ─── Hash Router ─────────────────────────────────────────────────────────────
+// ── Hash router ───────────────────────────────────────────────────────────────
 
-/// A lightweight hash-based router.
+/// Hash-based router. Renders the matching route into a container element.
 ///
 /// Routes are matched against `window.location.hash` (e.g. `"#/"`, `"#/about"`).
-/// When none match, the first route is rendered as default.
-///
-/// Returns a container `Element` that you can `mount()` or embed anywhere.
-///
-/// # Example
-/// ```ignore
-/// let app = use_router(vec![
-///     ("#/",       Box::new(|| tp! { h1.text("Home") })),
-///     ("#/about",  Box::new(|| tp! { h1.text("About") })),
-/// ]);
-/// mount(app);
-/// ```
+/// Falls back to the first route when no match is found.
 pub fn use_router(routes: Vec<(&'static str, Box<dyn Fn() -> Element + 'static>)>) -> Element {
     let container = create_element("div");
     let routes: Rc<Vec<(&'static str, Box<dyn Fn() -> Element>)>> = Rc::new(routes);
@@ -347,10 +313,8 @@ pub fn use_router(routes: Vec<(&'static str, Box<dyn Fn() -> Element + 'static>)
         }
     });
 
-    // Initial render
     render();
 
-    // Listen for hashchange events
     let render_for_event = Rc::clone(&render);
     let closure =
         Closure::<dyn FnMut(_)>::new(move |_event: web_sys::HashChangeEvent| {
@@ -365,8 +329,79 @@ pub fn use_router(routes: Vec<(&'static str, Box<dyn Fn() -> Element + 'static>)
     container
 }
 
-// ─── Prelude ──────────────────────────────────────────────────────────────────
+// ── Memo ──────────────────────────────────────────────────────────────────────
+
+/// Implemented for `Signal<T>` and tuples of up to three signals.
+pub trait Deps {
+    fn on_change<F: Fn() + 'static>(&self, f: F);
+}
+
+impl<T: Clone + 'static> Deps for Signal<T> {
+    fn on_change<F: Fn() + 'static>(&self, f: F) {
+        self.subscribe(f);
+    }
+}
+
+impl<T1, T2> Deps for (Signal<T1>, Signal<T2>)
+where
+    T1: Clone + 'static,
+    T2: Clone + 'static,
+{
+    fn on_change<F: Fn() + 'static>(&self, f: F) {
+        let f = Rc::new(f);
+        let f1 = Rc::clone(&f);
+        self.0.subscribe(move || f1());
+        self.1.subscribe(move || f());
+    }
+}
+
+impl<T1, T2, T3> Deps for (Signal<T1>, Signal<T2>, Signal<T3>)
+where
+    T1: Clone + 'static,
+    T2: Clone + 'static,
+    T3: Clone + 'static,
+{
+    fn on_change<F: Fn() + 'static>(&self, f: F) {
+        let f = Rc::new(f);
+        let f1 = Rc::clone(&f);
+        let f2 = Rc::clone(&f);
+        self.0.subscribe(move || f1());
+        self.1.subscribe(move || f2());
+        self.2.subscribe(move || f());
+    }
+}
+
+/// Computed signal that re-evaluates whenever a dependency changes.
+pub fn use_memo<T, D, F>(deps: D, compute: F) -> Signal<T>
+where
+    T: Clone + 'static,
+    D: Deps,
+    F: Fn() -> T + 'static,
+{
+    let compute = Rc::new(compute);
+    let result = Signal::new(compute());
+    let result_clone = result.clone();
+    let compute_clone = Rc::clone(&compute);
+    deps.on_change(move || {
+        result_clone.set(compute_clone());
+    });
+    result
+}
+
+// ── Components ────────────────────────────────────────────────────────────────
+
+/// Struct-based component. For most cases, plain functions returning `Element` are simpler.
+pub trait Component {
+    fn render(self) -> Element;
+}
+
+// ── Prelude ───────────────────────────────────────────────────────────────────
 
 pub mod prelude {
-    pub use super::{init, mount, mount_to, tp, use_local_storage, use_router, use_state, Signal};
+    pub use super::{
+        init, mount, mount_to, spawn_local, tp,
+        use_effect, use_interval, use_local_storage, use_router, use_state,
+        Component, Deps, IntervalHandle, Signal,
+        use_memo,
+    };
 }
