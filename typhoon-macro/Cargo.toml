@@ -1,7 +1,7 @@
 [package]
 name = "typhoon-macro"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 description = "Proc-macro crate for Typhoon framework - the tp! macro"
 license = "MIT"
 repository = "https://github.com/yourusername/typhoon"

@@ -1,7 +1,7 @@
 [package]
 name = "typhoon-core"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 description = "Typhoon — lightweight Rust/WASM frontend framework for beginners"
 license = "MIT"
 repository = "https://github.com/SamOnC0de/typhoon"
@@ -35,7 +35,7 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 wasm-bindgen-futures = "0.4"
 console_error_panic_hook = "0.1"
-typhoon-macro = { path = "../typhoon-macro" }
+typhoon-macro = "0.1.0"
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3"

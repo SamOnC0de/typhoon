@@ -57,7 +57,7 @@ Add to your `Cargo.toml`:
 crate-type = ["cdylib"]
 
 [dependencies]
-typhoon-core = { git = "https://github.com/SamOnC0de/typhoon" }
+typhoon-core = "0.1"
 wasm-bindgen = "0.2"
 ```
 
@@ -90,7 +90,7 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
-typhoon-core = { git = "https://github.com/SamOnC0de/typhoon" }
+typhoon-core = "0.1"
 wasm-bindgen = "0.2"
 ```
 
