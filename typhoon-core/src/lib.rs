@@ -404,4 +404,5 @@ pub mod prelude {
         Component, Deps, IntervalHandle, Signal,
         use_memo,
     };
+    pub use web_sys::Element;
 }

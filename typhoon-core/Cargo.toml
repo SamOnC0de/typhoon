@@ -1,6 +1,6 @@
 [package]
 name = "typhoon-core"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 description = "Typhoon — lightweight Rust/WASM frontend framework for beginners"
 license = "MIT"
