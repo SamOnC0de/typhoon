@@ -4,7 +4,12 @@ use wasm_bindgen::prelude::*;
 
 fn current_time() -> String {
     let d = Date::new_0();
-    format!("{:02}:{:02}:{:02}", d.get_hours(), d.get_minutes(), d.get_seconds())
+    format!(
+        "{:02}:{:02}:{:02}",
+        d.get_hours(),
+        d.get_minutes(),
+        d.get_seconds()
+    )
 }
 
 #[wasm_bindgen(start)]
@@ -24,9 +29,13 @@ pub fn main() {
     });
 
     let time_tick = time.clone();
-    use_interval(move || {
-        time_tick.set(current_time());
-    }, 1000).forget();
+    use_interval(
+        move || {
+            time_tick.set(current_time());
+        },
+        1000,
+    )
+    .forget();
 
     let app = tp! {
         div.class("app")

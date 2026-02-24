@@ -87,10 +87,14 @@ pub fn main() {
         div.style("display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));\
                    gap:.8rem;margin-bottom:1.5rem")
     };
-    grid.append_child(card("Counter",    "Reactive signals",        "use_state").as_ref()).unwrap();
-    grid.append_child(card("Todo",       "Persistent list",         "use_local_storage").as_ref()).unwrap();
-    grid.append_child(card("Clock",      "Ticking timer",           "use_interval").as_ref()).unwrap();
-    grid.append_child(card("Router",     "Hash-based navigation",   "use_router").as_ref()).unwrap();
+    grid.append_child(card("Counter", "Reactive signals", "use_state").as_ref())
+        .unwrap();
+    grid.append_child(card("Todo", "Persistent list", "use_local_storage").as_ref())
+        .unwrap();
+    grid.append_child(card("Clock", "Ticking timer", "use_interval").as_ref())
+        .unwrap();
+    grid.append_child(card("Router", "Hash-based navigation", "use_router").as_ref())
+        .unwrap();
 
     app.append_child(grid.as_ref()).unwrap();
 

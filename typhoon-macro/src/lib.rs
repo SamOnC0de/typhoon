@@ -2,9 +2,9 @@ use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
 use syn::{
-    braced,
+    Expr, Ident, LitStr, Token, braced,
     parse::{Parse, ParseStream, Result},
-    parse_macro_input, Expr, Ident, LitStr, Token,
+    parse_macro_input,
 };
 
 struct NodeMethod {
@@ -62,7 +62,11 @@ impl Parse for TpNode {
             }
         }
 
-        Ok(TpNode { tag, methods, children })
+        Ok(TpNode {
+            tag,
+            methods,
+            children,
+        })
     }
 }
 

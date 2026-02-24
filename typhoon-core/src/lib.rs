@@ -2,7 +2,7 @@
 
 use std::{cell::RefCell, rc::Rc};
 
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{Serialize, de::DeserializeOwned};
 use wasm_bindgen::prelude::*;
 use web_sys::{Document, Element, Text};
 
@@ -196,10 +196,7 @@ pub fn use_effect<F: FnOnce() + 'static>(f: F) {
     });
     web_sys::window()
         .expect("no window")
-        .set_timeout_with_callback_and_timeout_and_arguments_0(
-            closure.as_ref().unchecked_ref(),
-            0,
-        )
+        .set_timeout_with_callback_and_timeout_and_arguments_0(closure.as_ref().unchecked_ref(), 0)
         .expect("failed to schedule effect");
     closure.forget();
 }
@@ -256,9 +253,7 @@ where
 
     let signal_for_sub = signal.clone();
     signal.subscribe(move || {
-        if let Some(storage) = web_sys::window()
-            .and_then(|w| w.local_storage().ok().flatten())
-        {
+        if let Some(storage) = web_sys::window().and_then(|w| w.local_storage().ok().flatten()) {
             if let Ok(json) = serde_json::to_string(&signal_for_sub.get()) {
                 storage.set_item(key, &json).ok();
             }
@@ -316,10 +311,9 @@ pub fn use_router(routes: Vec<(&'static str, Box<dyn Fn() -> Element + 'static>)
     render();
 
     let render_for_event = Rc::clone(&render);
-    let closure =
-        Closure::<dyn FnMut(_)>::new(move |_event: web_sys::HashChangeEvent| {
-            render_for_event();
-        });
+    let closure = Closure::<dyn FnMut(_)>::new(move |_event: web_sys::HashChangeEvent| {
+        render_for_event();
+    });
     web_sys::window()
         .expect("no window")
         .add_event_listener_with_callback("hashchange", closure.as_ref().unchecked_ref())
@@ -399,10 +393,8 @@ pub trait Component {
 
 pub mod prelude {
     pub use super::{
-        init, mount, mount_to, spawn_local, tp,
-        use_effect, use_interval, use_local_storage, use_router, use_state,
-        Component, Deps, IntervalHandle, Signal,
-        use_memo,
+        Component, Deps, IntervalHandle, Signal, init, mount, mount_to, spawn_local, tp,
+        use_effect, use_interval, use_local_storage, use_memo, use_router, use_state,
     };
     pub use web_sys::Element;
 }
