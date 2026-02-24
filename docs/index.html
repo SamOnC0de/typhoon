@@ -27,14 +27,20 @@
 
     /* ── Nav ── */
     nav {
+      position: sticky;
+      top: 0;
+      z-index: 10;
       display: flex;
       align-items: center;
       gap: 1.5rem;
       padding: 1rem 2rem;
       border-bottom: 1px solid var(--border);
+      background: rgba(15, 15, 19, 0.85);
+      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(10px);
     }
     nav .logo { font-size: 1.2rem; font-weight: 700; color: var(--accent); text-decoration: none; }
-    nav a { color: var(--muted); text-decoration: none; font-size: .9rem; }
+    nav a { color: var(--muted); text-decoration: none; font-size: .9rem; transition: color .15s; }
     nav a:hover { color: var(--text); }
     nav .spacer { flex: 1; }
     nav .btn-gh {
@@ -44,53 +50,72 @@
       color: var(--text);
       text-decoration: none;
       font-size: .85rem;
+      transition: border-color .15s, color .15s;
     }
     nav .btn-gh:hover { border-color: var(--accent); color: var(--accent); }
 
     /* ── Intro ── */
     .intro {
       text-align: center;
-      padding: 5rem 2rem 3rem;
+      padding: 6rem 2rem 4rem;
       max-width: 700px;
       margin: 0 auto;
     }
-    .intro h1 { font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 800; color: var(--accent); }
+    .intro h1 {
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      font-weight: 800;
+      color: var(--accent);
+      letter-spacing: -.02em;
+    }
     .intro p  { margin-top: 1rem; color: var(--muted); font-size: 1.1rem; }
-    .intro .badges { margin-top: 1.2rem; display: flex; justify-content: center; gap: .6rem; flex-wrap: wrap; }
+    .intro .badges { margin-top: 1.4rem; display: flex; justify-content: center; gap: .6rem; flex-wrap: wrap; }
     .intro .badges img { height: 20px; }
-    .intro .cta { margin-top: 2rem; display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; }
+    .intro .cta { margin-top: 2.2rem; display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; }
     .intro .cta a {
-      padding: .6rem 1.4rem;
+      padding: .65rem 1.6rem;
       border-radius: 8px;
       font-weight: 600;
       text-decoration: none;
       font-size: .95rem;
+      transition: opacity .15s, border-color .15s;
     }
     .btn-primary  { background: var(--accent); color: var(--bg); }
+    .btn-primary:hover { opacity: .88; }
     .btn-secondary { border: 1px solid var(--border); color: var(--text); }
-    .btn-secondary:hover { border-color: var(--accent); }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── Section header ── */
+    .section-label {
+      text-align: center;
+      font-size: .75rem;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1.6rem;
+    }
 
     /* ── Features ── */
+    .features-wrap { max-width: 940px; margin: 0 auto; padding: 3rem 2rem; }
     .features {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 1.2rem;
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 2rem;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 1rem;
     }
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 10px;
+      border-radius: 12px;
       padding: 1.4rem;
+      transition: border-color .2s, transform .2s;
     }
-    .card h3 { font-size: 1rem; color: var(--accent); margin-bottom: .5rem; }
-    .card p  { color: var(--muted); font-size: .9rem; }
+    .card:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .card h3 { font-size: .95rem; color: var(--accent); margin-bottom: .5rem; }
+    .card p  { color: var(--muted); font-size: .88rem; line-height: 1.55; }
 
     /* ── Code + Demo ── */
-    .section { max-width: 900px; margin: 0 auto; padding: 2rem; }
-    .section h2 { font-size: 1.4rem; margin-bottom: 1.2rem; }
+    .section { max-width: 940px; margin: 0 auto; padding: 3rem 2rem; }
+    .section h2 { font-size: 1.4rem; margin-bottom: 1.4rem; }
 
     .demo-grid {
       display: grid;
@@ -98,16 +123,16 @@
       gap: 1.2rem;
       align-items: start;
     }
-    @media (max-width: 640px) { .demo-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 660px) { .demo-grid { grid-template-columns: 1fr; } }
 
     pre {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 1.2rem;
+      border-radius: 10px;
+      padding: 1.4rem;
       overflow-x: auto;
-      font-size: .82rem;
-      line-height: 1.5;
+      font-size: .81rem;
+      line-height: 1.6;
     }
     code { font-family: ui-monospace, monospace; }
     .kw  { color: #89b4fa; }
@@ -119,7 +144,7 @@
     .demo-frame {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: 10px;
       overflow: hidden;
     }
     .demo-frame .demo-title {
@@ -149,27 +174,26 @@
     }
 
     /* ── Roadmap ── */
-    .roadmap { max-width: 700px; margin: 0 auto; padding: 2rem; }
-    .roadmap h2 { font-size: 1.4rem; margin-bottom: 1rem; }
-    .roadmap ul { list-style: none; }
-    .roadmap li {
-      padding: .5rem 0;
+    .roadmap-wrap { max-width: 680px; margin: 0 auto; padding: 3rem 2rem; }
+    .roadmap-wrap h2 { font-size: 1.4rem; margin-bottom: 1.2rem; }
+    .roadmap-wrap ul { list-style: none; }
+    .roadmap-wrap li {
+      padding: .55rem 0;
       border-bottom: 1px solid var(--border);
-      font-size: .95rem;
+      font-size: .93rem;
       display: flex;
       align-items: center;
       gap: .8rem;
     }
-    .roadmap li:last-child { border: none; }
+    .roadmap-wrap li:last-child { border: none; }
     .tag {
-      font-size: .72rem;
-      padding: 2px 7px;
+      font-size: .7rem;
+      padding: 2px 8px;
       border-radius: 999px;
       font-weight: 600;
       white-space: nowrap;
     }
     .tag-done { background: #1e3a2e; color: var(--green); }
-    .tag-wip  { background: #2a2340; color: var(--accent); }
     .tag-next { background: #1a1a2e; color: var(--muted); }
 
     /* ── Footer ── */
@@ -179,14 +203,14 @@
       color: var(--muted);
       font-size: .85rem;
       border-top: 1px solid var(--border);
-      margin-top: 3rem;
+      margin-top: 2rem;
     }
     footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
 
-<!-- ── Navigation ─────────────────────────────────────────────── -->
 <nav>
   <a class="logo" href="#">🌀 Typhoon</a>
   <a href="#features">Features</a>
@@ -196,7 +220,6 @@
   <a class="btn-gh" href="https://github.com/SamOnC0de/typhoon" target="_blank" rel="noopener">GitHub →</a>
 </nav>
 
-<!-- ── Intro ──────────────────────────────────────────────────── -->
 <section class="intro">
   <h1>Build web UIs in pure Rust</h1>
   <p>Typhoon is a lightweight Rust/WASM frontend framework designed for beginners.<br>
@@ -206,55 +229,56 @@
     <img src="https://img.shields.io/badge/Rust-2021-orange?logo=rust" alt="Rust 2021" />
     <img src="https://img.shields.io/badge/WASM-ready-blue?logo=webassembly" alt="WASM" />
     <img src="https://img.shields.io/badge/bundle-%3C100KB-green" alt="< 100 KB" />
+    <img src="https://img.shields.io/crates/v/typhoon-core?label=crates.io" alt="crates.io" />
     <img src="https://img.shields.io/badge/license-MIT-lightgrey" alt="MIT" />
   </div>
 
   <div class="cta">
-    <a class="cta btn-primary" href="https://github.com/SamOnC0de/typhoon#quick-start">Get started</a>
-    <a class="cta btn-secondary" href="https://github.com/SamOnC0de/typhoon" target="_blank" rel="noopener">View on GitHub</a>
+    <a class="btn-primary" href="https://github.com/SamOnC0de/typhoon#quick-start">Get started</a>
+    <a class="btn-secondary" href="https://github.com/SamOnC0de/typhoon" target="_blank" rel="noopener">View on GitHub</a>
   </div>
 </section>
 
-<!-- ── Features ───────────────────────────────────────────────── -->
 <section id="features">
-  <div class="features">
-    <div class="card">
-      <h3>🧩 tp! macro</h3>
-      <p>Write HTML-like trees directly in Rust. Nested elements, event handlers, and attributes — all in one expression.</p>
-    </div>
-    <div class="card">
-      <h3>⚡ Reactive signals</h3>
-      <p><code>use_state()</code> gives you fine-grained reactivity. Subscribers fire instantly when values change.</p>
-    </div>
-    <div class="card">
-      <h3>💾 Local storage</h3>
-      <p><code>use_local_storage()</code> persists any serialisable value to <code>localStorage</code> automatically.</p>
-    </div>
-    <div class="card">
-      <h3>🔀 Hash router</h3>
-      <p><code>use_router()</code> maps <code>#/</code>, <code>#/about</code> etc. to render functions — zero config needed.</p>
-    </div>
-    <div class="card">
-      <h3>⏱ Effects & timers</h3>
-      <p><code>use_effect()</code> runs after mount. <code>use_interval()</code> sets up a repeating timer with RAII cleanup.</p>
-    </div>
-    <div class="card">
-      <h3>📦 &lt; 100 KB</h3>
-      <p>Built with <code>opt-level = "z"</code>, LTO, and wasm-opt. Stays lean so your pages load fast.</p>
-    </div>
-    <div class="card">
-      <h3>🦀 Beginner friendly</h3>
-      <p>No macros you didn't write. No black-box magic. Read the source — it's &lt; 300 lines.</p>
+  <div class="features-wrap">
+    <p class="section-label">Features</p>
+    <div class="features">
+      <div class="card">
+        <h3>🧩 tp! macro</h3>
+        <p>Write HTML-like trees directly in Rust. Nested elements, event handlers, attributes — all in one expression.</p>
+      </div>
+      <div class="card">
+        <h3>⚡ Reactive signals</h3>
+        <p><code>use_state()</code> gives you fine-grained reactivity. Subscribers fire instantly when values change.</p>
+      </div>
+      <div class="card">
+        <h3>💾 Local storage</h3>
+        <p><code>use_local_storage()</code> persists any serialisable value to <code>localStorage</code> automatically.</p>
+      </div>
+      <div class="card">
+        <h3>🔀 Hash router</h3>
+        <p><code>use_router()</code> maps <code>#/</code>, <code>#/about</code> etc. to render functions — zero config.</p>
+      </div>
+      <div class="card">
+        <h3>⏱ Effects & timers</h3>
+        <p><code>use_effect()</code> runs after mount. <code>use_interval()</code> sets up a repeating timer with RAII cleanup.</p>
+      </div>
+      <div class="card">
+        <h3>📦 &lt; 100 KB</h3>
+        <p>Built with <code>opt-level = "z"</code>, LTO, and wasm-opt. Stays lean so pages load fast.</p>
+      </div>
+      <div class="card">
+        <h3>🦀 Beginner friendly</h3>
+        <p>No black-box magic. Read the source — it's &lt; 300 lines of straightforward Rust.</p>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- ── Demo ───────────────────────────────────────────────────── -->
 <section id="demo" class="section">
-  <h2>Live demo</h2>
+  <p class="section-label">Live demo</p>
   <div class="demo-grid">
 
-    <!-- Code snippet -->
     <pre><code><span class="kw">use</span> typhoon_core::prelude::*;
 <span class="kw">use</span> wasm_bindgen::prelude::*;
 
@@ -283,7 +307,6 @@ count.<span class="fn">subscribe</span>(<span class="kw">move</span> || {
 app.<span class="fn">append_child</span>(display.as_ref()).<span class="fn">unwrap</span>();
 <span class="fn">mount</span>(app);</code></pre>
 
-    <!-- Live iframe -->
     <div class="demo-frame">
       <div class="demo-title">
         <span class="dot dot-r"></span>
@@ -301,27 +324,28 @@ app.<span class="fn">append_child</span>(display.as_ref()).<span class="fn">unwr
   </div>
 </section>
 
-<!-- ── Roadmap ────────────────────────────────────────────────── -->
-<section id="roadmap" class="roadmap">
-  <h2>Roadmap</h2>
-  <ul>
-    <li><span class="tag tag-done">done</span> <code>tp!</code> macro — nested HTML-like trees</li>
-    <li><span class="tag tag-done">done</span> Reactive <code>Signal&lt;T&gt;</code> + <code>use_state()</code></li>
-    <li><span class="tag tag-done">done</span> Counter &amp; Todo examples</li>
-    <li><span class="tag tag-done">done</span> <code>use_local_storage()</code> — JSON persistence</li>
-    <li><span class="tag tag-done">done</span> <code>use_router()</code> — hash-based routing</li>
-    <li><span class="tag tag-done">done</span> <code>use_effect()</code> — one-shot async side-effect</li>
-    <li><span class="tag tag-done">done</span> <code>use_interval()</code> — repeating timer with RAII cleanup</li>
-    <li><span class="tag tag-done">done</span> GitHub Actions CI — build &amp; deploy docs</li>
-    <li><span class="tag tag-done">done</span> Component model — function components + <code>(expr)</code> in <code>tp!</code></li>
-    <li><span class="tag tag-done">done</span> <code>use_memo()</code> — computed/derived signals</li>
-    <li><span class="tag tag-done">done</span> Publish to crates.io — <code>cargo add typhoon-core</code></li>
-  </ul>
+<section id="roadmap">
+  <div class="roadmap-wrap">
+    <p class="section-label">Roadmap</p>
+    <ul>
+      <li><span class="tag tag-done">done</span> <code>tp!</code> macro — nested HTML-like trees</li>
+      <li><span class="tag tag-done">done</span> Reactive <code>Signal&lt;T&gt;</code> + <code>use_state()</code></li>
+      <li><span class="tag tag-done">done</span> Counter &amp; Todo examples</li>
+      <li><span class="tag tag-done">done</span> <code>use_local_storage()</code> — JSON persistence</li>
+      <li><span class="tag tag-done">done</span> <code>use_router()</code> — hash-based routing</li>
+      <li><span class="tag tag-done">done</span> <code>use_effect()</code> + <code>use_interval()</code></li>
+      <li><span class="tag tag-done">done</span> GitHub Actions CI — build &amp; deploy</li>
+      <li><span class="tag tag-done">done</span> Component model — function components + <code>(expr)</code></li>
+      <li><span class="tag tag-done">done</span> <code>use_memo()</code> — computed signals</li>
+      <li><span class="tag tag-done">done</span> Published on crates.io — <code>cargo add typhoon-core</code></li>
+      <li><span class="tag tag-next">planned</span> DOM diffing</li>
+      <li><span class="tag tag-next">planned</span> <code>#[typhoon::main]</code> attribute macro</li>
+    </ul>
+  </div>
 </section>
 
-<!-- ── Footer ─────────────────────────────────────────────────── -->
 <footer>
-  Built with 🦀 Rust &amp; ❤️ — MIT licence —
+  Built with 🦀 Rust — MIT licence —
   <a href="https://github.com/SamOnC0de/typhoon" target="_blank" rel="noopener">github.com/SamOnC0de/typhoon</a>
 </footer>
 
