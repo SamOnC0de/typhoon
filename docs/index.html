@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Typhoon — Lightweight Rust/WASM Frontend Framework</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #0f0f13;
+      --surface: #1e1e2e;
+      --border:  #313244;
+      --text:    #cdd6f4;
+      --muted:   #6c7086;
+      --accent:  #cba6f7;
+      --green:   #a6e3a1;
+      --red:     #f38ba8;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      line-height: 1.6;
+    }
+
+    /* ── Nav ── */
+    nav {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      padding: 1rem 2rem;
+      border-bottom: 1px solid var(--border);
+    }
+    nav .logo { font-size: 1.2rem; font-weight: 700; color: var(--accent); text-decoration: none; }
+    nav a { color: var(--muted); text-decoration: none; font-size: .9rem; }
+    nav a:hover { color: var(--text); }
+    nav .spacer { flex: 1; }
+    nav .btn-gh {
+      padding: .4rem .9rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      text-decoration: none;
+      font-size: .85rem;
+    }
+    nav .btn-gh:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── Hero ── */
+    .hero {
+      text-align: center;
+      padding: 5rem 2rem 3rem;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    .hero h1 { font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 800; color: var(--accent); }
+    .hero p  { margin-top: 1rem; color: var(--muted); font-size: 1.1rem; }
+    .hero .badges { margin-top: 1.2rem; display: flex; justify-content: center; gap: .6rem; flex-wrap: wrap; }
+    .hero .badges img { height: 20px; }
+    .hero .cta { margin-top: 2rem; display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; }
+    .hero .cta a {
+      padding: .6rem 1.4rem;
+      border-radius: 8px;
+      font-weight: 600;
+      text-decoration: none;
+      font-size: .95rem;
+    }
+    .btn-primary  { background: var(--accent); color: var(--bg); }
+    .btn-secondary { border: 1px solid var(--border); color: var(--text); }
+    .btn-secondary:hover { border-color: var(--accent); }
+
+    /* ── Features ── */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.2rem;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.4rem;
+    }
+    .card h3 { font-size: 1rem; color: var(--accent); margin-bottom: .5rem; }
+    .card p  { color: var(--muted); font-size: .9rem; }
+
+    /* ── Code + Demo ── */
+    .section { max-width: 900px; margin: 0 auto; padding: 2rem; }
+    .section h2 { font-size: 1.4rem; margin-bottom: 1.2rem; }
+
+    .demo-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.2rem;
+      align-items: start;
+    }
+    @media (max-width: 640px) { .demo-grid { grid-template-columns: 1fr; } }
+
+    pre {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.2rem;
+      overflow-x: auto;
+      font-size: .82rem;
+      line-height: 1.5;
+    }
+    code { font-family: ui-monospace, monospace; }
+    .kw  { color: #89b4fa; }
+    .fn  { color: #89dceb; }
+    .str { color: var(--green); }
+    .mac { color: var(--accent); }
+    .cm  { color: var(--muted); font-style: italic; }
+
+    .demo-frame {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .demo-frame .demo-title {
+      padding: .5rem 1rem;
+      border-bottom: 1px solid var(--border);
+      font-size: .8rem;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+    }
+    .demo-frame .dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .dot-r { background: var(--red); }
+    .dot-y { background: #f9e2af; }
+    .dot-g { background: var(--green); }
+
+    iframe {
+      width: 100%;
+      height: 240px;
+      border: none;
+      display: block;
+      background: var(--bg);
+    }
+
+    /* ── Roadmap ── */
+    .roadmap { max-width: 700px; margin: 0 auto; padding: 2rem; }
+    .roadmap h2 { font-size: 1.4rem; margin-bottom: 1rem; }
+    .roadmap ul { list-style: none; }
+    .roadmap li {
+      padding: .5rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: .95rem;
+      display: flex;
+      align-items: center;
+      gap: .8rem;
+    }
+    .roadmap li:last-child { border: none; }
+    .tag {
+      font-size: .72rem;
+      padding: 2px 7px;
+      border-radius: 999px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .tag-done { background: #1e3a2e; color: var(--green); }
+    .tag-wip  { background: #2a2340; color: var(--accent); }
+    .tag-next { background: #1a1a2e; color: var(--muted); }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 2rem;
+      color: var(--muted);
+      font-size: .85rem;
+      border-top: 1px solid var(--border);
+      margin-top: 3rem;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+  </style>
+</head>
+<body>
+
+<!-- ── Navigation ─────────────────────────────────────────────── -->
+<nav>
+  <a class="logo" href="#">🌀 Typhoon</a>
+  <a href="#features">Features</a>
+  <a href="#demo">Demo</a>
+  <a href="#roadmap">Roadmap</a>
+  <span class="spacer"></span>
+  <a class="btn-gh" href="https://github.com/SamOnC0de/typhoon" target="_blank" rel="noopener">GitHub →</a>
+</nav>
+
+<!-- ── Hero ───────────────────────────────────────────────────── -->
+<section class="hero">
+  <h1>Build web UIs in pure Rust</h1>
+  <p>Typhoon is a lightweight Rust/WASM frontend framework designed for beginners.<br>
+     No JavaScript. No heavyweight runtime. Just Rust and the DOM.</p>
+
+  <div class="badges">
+    <img src="https://img.shields.io/badge/Rust-2021-orange?logo=rust" alt="Rust 2021" />
+    <img src="https://img.shields.io/badge/WASM-ready-blue?logo=webassembly" alt="WASM" />
+    <img src="https://img.shields.io/badge/bundle-%3C100KB-green" alt="< 100 KB" />
+    <img src="https://img.shields.io/badge/license-MIT-lightgrey" alt="MIT" />
+  </div>
+
+  <div class="cta">
+    <a class="cta btn-primary" href="https://github.com/SamOnC0de/typhoon#quick-start">Get started</a>
+    <a class="cta btn-secondary" href="https://github.com/SamOnC0de/typhoon" target="_blank" rel="noopener">View on GitHub</a>
+  </div>
+</section>
+
+<!-- ── Features ───────────────────────────────────────────────── -->
+<section id="features">
+  <div class="features">
+    <div class="card">
+      <h3>🧩 tp! macro</h3>
+      <p>Write HTML-like trees directly in Rust. Nested elements, event handlers, and attributes — all in one expression.</p>
+    </div>
+    <div class="card">
+      <h3>⚡ Reactive signals</h3>
+      <p><code>use_state()</code> gives you fine-grained reactivity. Subscribers fire instantly when values change.</p>
+    </div>
+    <div class="card">
+      <h3>💾 Local storage</h3>
+      <p><code>use_local_storage()</code> persists any serialisable value to <code>localStorage</code> automatically.</p>
+    </div>
+    <div class="card">
+      <h3>🔀 Hash router</h3>
+      <p><code>use_router()</code> maps <code>#/</code>, <code>#/about</code> etc. to render functions — zero config needed.</p>
+    </div>
+    <div class="card">
+      <h3>📦 &lt; 100 KB</h3>
+      <p>Built with <code>opt-level = "z"</code>, LTO, and wasm-opt. Stays lean so your pages load fast.</p>
+    </div>
+    <div class="card">
+      <h3>🦀 Beginner friendly</h3>
+      <p>No macros you didn't write. No black-box magic. Read the source — it's &lt; 300 lines.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── Demo ───────────────────────────────────────────────────── -->
+<section id="demo" class="section">
+  <h2>Live demo</h2>
+  <div class="demo-grid">
+
+    <!-- Code snippet -->
+    <pre><code><span class="kw">use</span> typhoon_core::prelude::*;
+<span class="kw">use</span> wasm_bindgen::prelude::*;
+
+<span class="cm">// counter that survives page refresh</span>
+<span class="kw">let</span> count = <span class="fn">use_local_storage</span>(<span class="str">"count"</span>, 0i32);
+
+<span class="kw">let</span> display = <span class="mac">tp!</span> {
+    p.text(count.get())
+     .style(<span class="str">"font-size:2rem"</span>)
+};
+<span class="kw">let</span> disp_ref = display.clone();
+<span class="kw">let</span> count_sub = count.clone();
+count.<span class="fn">subscribe</span>(<span class="kw">move</span> || {
+    disp_ref.<span class="fn">set_text_content</span>(
+        Some(&amp;count_sub.get().<span class="fn">to_string</span>())
+    );
+});
+
+<span class="kw">let</span> c = count.clone();
+<span class="kw">let</span> app = <span class="mac">tp!</span> {
+    div.class(<span class="str">"app"</span>) {
+        h1.text(<span class="str">"🌀 Counter"</span>)
+        button.onclick(<span class="kw">move</span> || c.<span class="fn">set</span>(c.<span class="fn">get</span>() + 1)) { <span class="str">"+"</span> }
+    }
+};
+app.<span class="fn">append_child</span>(display.as_ref()).<span class="fn">unwrap</span>();
+<span class="fn">mount</span>(app);</code></pre>
+
+    <!-- Live iframe -->
+    <div class="demo-frame">
+      <div class="demo-title">
+        <span class="dot dot-r"></span>
+        <span class="dot dot-y"></span>
+        <span class="dot dot-g"></span>
+        &nbsp;counter demo
+      </div>
+      <iframe
+        src="counter/index.html"
+        title="Typhoon counter demo"
+        sandbox="allow-scripts allow-same-origin"
+      ></iframe>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── Roadmap ────────────────────────────────────────────────── -->
+<section id="roadmap" class="roadmap">
+  <h2>Roadmap</h2>
+  <ul>
+    <li><span class="tag tag-done">done</span> <code>tp!</code> macro — nested HTML-like trees</li>
+    <li><span class="tag tag-done">done</span> Reactive <code>Signal&lt;T&gt;</code> + <code>use_state()</code></li>
+    <li><span class="tag tag-done">done</span> Counter &amp; Todo examples</li>
+    <li><span class="tag tag-done">done</span> <code>use_local_storage()</code> — JSON persistence</li>
+    <li><span class="tag tag-done">done</span> <code>use_router()</code> — hash-based routing</li>
+    <li><span class="tag tag-wip">in progress</span> GitHub Actions CI — build &amp; deploy docs</li>
+    <li><span class="tag tag-next">planned</span> <code>use_effect()</code> — side-effect hook</li>
+    <li><span class="tag tag-next">planned</span> Computed signals (<code>use_memo()</code>)</li>
+    <li><span class="tag tag-next">planned</span> Component model</li>
+  </ul>
+</section>
+
+<!-- ── Footer ─────────────────────────────────────────────────── -->
+<footer>
+  Built with 🦀 Rust &amp; ❤️ — MIT licence —
+  <a href="https://github.com/SamOnC0de/typhoon" target="_blank" rel="noopener">github.com/SamOnC0de/typhoon</a>
+</footer>
+
+</body>
+</html>

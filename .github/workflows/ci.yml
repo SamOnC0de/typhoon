@@ -1,0 +1,132 @@
+name: CI & Deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Permissions needed for the GitHub Pages deployment job
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only one Pages deployment at a time; don't cancel in-progress so a
+# finishing deployment isn't interrupted by a new push.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # ── 1. Static checks ────────────────────────────────────────────────────────
+  check:
+    name: Check & Clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+          components: clippy, rustfmt
+
+      - name: Cache
+        uses: Swatinem/rust-cache@v2
+
+      # proc-macro crates compile for the HOST, never for wasm32
+      - name: Check proc-macro (native host)
+        run: cargo check -p typhoon-macro
+
+      # core + examples compile for the wasm32 target
+      - name: Check core & examples (wasm32)
+        run: cargo check -p typhoon-core -p counter -p todo --target wasm32-unknown-unknown
+
+      - name: Clippy (proc-macro)
+        run: cargo clippy -p typhoon-macro -- -D warnings
+
+      - name: Rustfmt
+        run: cargo fmt --all -- --check
+
+  # ── 2. Build examples + assemble the Pages site ─────────────────────────────
+  build:
+    name: Build Examples & Site
+    runs-on: ubuntu-latest
+    needs: check
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust stable + wasm target
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install Trunk
+        run: cargo install trunk --locked
+
+      - name: Install wasm-bindgen-cli
+        run: cargo install wasm-bindgen-cli --locked
+
+      # REPO_NAME is the part after the slash in "owner/repo"
+      # It forms the base path on GitHub Pages: yourusername.github.io/REPO_NAME/
+      - name: Derive public URL base
+        run: echo "REPO_NAME=${GITHUB_REPOSITORY#*/}" >> "$GITHUB_ENV"
+
+      - name: Build counter example
+        working-directory: examples/counter
+        run: trunk build --release --public-url "/$REPO_NAME/counter/"
+
+      - name: Build todo example
+        working-directory: examples/todo
+        run: trunk build --release --public-url "/$REPO_NAME/todo/"
+
+      # Assemble: static docs site + built examples
+      - name: Assemble Pages site
+        run: |
+          mkdir -p _site/counter _site/todo
+          cp -r docs/.  _site/
+          cp -r examples/counter/dist/.  _site/counter/
+          cp -r examples/todo/dist/.     _site/todo/
+
+      # Upload the assembled folder as the GitHub Pages artifact
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      # Also keep individual dists accessible for PR review
+      - name: Upload counter dist (artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: counter-dist
+          path: examples/counter/dist/
+
+      - name: Upload todo dist (artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: todo-dist
+          path: examples/todo/dist/
+
+  # ── 3. Deploy to GitHub Pages (main branch only) ────────────────────────────
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

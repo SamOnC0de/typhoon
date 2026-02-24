@@ -1,0 +1,8 @@
+[workspace]
+members = [
+    "typhoon-core",
+    "typhoon-macro",
+    "examples/counter",
+    "examples/todo",
+]
+resolver = "2"

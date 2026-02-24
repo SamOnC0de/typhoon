@@ -1,0 +1,12 @@
+[package]
+name = "todo"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+typhoon-core = { path = "../../typhoon-core" }
+wasm-bindgen = "0.2"
+web-sys = { version = "0.3", features = ["HtmlInputElement"] }
