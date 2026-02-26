@@ -1,6 +1,6 @@
 # 🌀 Typhoon
 
-> **Build web apps in pure Rust — no JavaScript, no complexity.**
+> **Build web apps in pure Rust  no JavaScript, no complexity.**
 > A lightweight WASM frontend framework designed for beginners and fast prototypes.
 
 ```rust
